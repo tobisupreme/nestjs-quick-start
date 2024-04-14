@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  Male
+  Female
+  Unknown
+}
+
+enum PasswordStrength {
+  Normal
+  Medium
+  Strong
+}
+
+model User {
+  id                Int         @id @default(autoincrement())
+  username          String?     @db.VarChar(20)
+  email             String      @unique() @db.VarChar(50)
+  gender            Gender?
+  password          String      @db.VarChar(255)
+  passwordUpdatedAt DateTime?   @default(now()) @db.Timestamptz(6)
+  passwordLockedAt  DateTime?   @db.Timestamptz(6)
+  passwordHistory   Json?       @db.JsonB
+  passwordAttempt   Int?        @db.SmallInt
+  lastLogin         DateTime?   @db.Timestamptz(6)
+  lastLoginIp       String?     @db.VarChar(20)
+  status            Boolean     @default(true)
+  contactId         Int         @unique
+  contact           UserContact @relation(fields: [contactId], references: [id])
+  createdBy         Int?
+  updatedBy         Int?
+  createdAt         DateTime    @default(dbgenerated("now()")) @db.Timestamptz(6)
+  updatedAt         DateTime    @default(dbgenerated("now()")) @updatedAt @db.Timestamptz(6)
+
+  @@map("users")
+}
+
+model UserContact {
+  id         Int      @id @default(autoincrement())
+  firstName  String   @db.VarChar
+  middleName String?  @db.VarChar
+  lastName   String   @db.VarChar
+  phone      String   @db.VarChar(20)
+  status     Boolean  @default(true)
+  createdBy  Int?
+  createdAt  DateTime @default(dbgenerated("now()")) @db.Timestamptz(6)
+  updatedAt  DateTime @default(dbgenerated("now()")) @updatedAt @db.Timestamptz(6)
+  updatedBy  Int?
+
+  User User?
+
+  @@map("contact")
+}
+
+model PasswordPolicy {
+  id                    Int              @id @default(autoincrement())
+  enforcePolicy         Boolean          @default(false) @db.Boolean
+  strength              PasswordStrength @default(Normal)
+  minPasswordLength     Int              @db.SmallInt
+  passwordHistoryLength Int              @db.SmallInt
+  expiryDuration        Int              @db.SmallInt
+  minPasswordAge        Int              @db.SmallInt
+  allowedAttempts       Int              @db.SmallInt
+  lockDuration          String?
+  status                Boolean          @default(true) @db.Boolean
+  createdAt             DateTime         @default(dbgenerated("now()")) @db.Timestamptz(6)
+  createdBy             Int?
+  updatedAt             DateTime         @default(dbgenerated("now()")) @updatedAt @db.Timestamptz(6)
+  updatedBy             Int?
+
+  @@map("password_policy")
+}
