@@ -1,15 +1,14 @@
 import { ErrorsInterceptor } from '@@common/interceptors/errors.interceptor';
 import { RequestInterceptor } from '@@common/interceptors/request.interceptor';
 import { ResponseInterceptor } from '@@common/interceptors/response.interceptor';
+import { initSwagger } from '@@common/swagger';
 import {
   BadRequestException,
-  INestApplication,
   ValidationError,
   ValidationPipe,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -17,46 +16,16 @@ async function bootstrap() {
   const configService = app.get<ConfigService>(ConfigService);
 
   const appPort = configService.get('app.port');
-  const appHost = [];
-  appHost.push(configService.get('app.host'));
   const appName = configService.get('app.name');
   const appVersion = configService.get('app.version');
   const appDescription = configService.get('app.desciption');
 
-  const initSwagger = (
-    app: INestApplication,
-    {
-      appHost,
-      appName,
-      appVersion,
-      appDescription,
-    }: {
-      appHost: string[];
-      appName: string;
-      appVersion: string;
-      appDescription: string;
-    },
-  ) => {
-    const config = new DocumentBuilder()
-      .setTitle(appName)
-      .setDescription(appDescription)
-      .setVersion(appVersion)
-      .addBearerAuth();
-
-    appHost.forEach((appHost) => {
-      config.addServer(appHost);
-    });
-
-    const document = SwaggerModule.createDocument(app, config.build());
-
-    SwaggerModule.setup('/swagger', app, document, {
-      swaggerOptions: {
-        persistAuthorization: true,
-      },
-    });
-  };
-
-  initSwagger(app, { appDescription, appHost, appName, appVersion });
+  initSwagger(app, {
+    appDescription,
+    appHost: [{ url: configService.get('app.host') }],
+    appName,
+    appVersion,
+  });
 
   app.useGlobalInterceptors(
     new RequestInterceptor(),
