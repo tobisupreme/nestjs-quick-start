@@ -19,6 +19,7 @@ async function bootstrap() {
   const appName = configService.get('app.name');
   const appVersion = configService.get('app.version');
   const appDescription = configService.get('app.desciption');
+  const corsOptions = configService.get('cors');
 
   initSwagger(app, {
     appDescription,
@@ -52,6 +53,8 @@ async function bootstrap() {
         ),
     }),
   );
+
+  app.enableCors(corsOptions);
 
   await app.listen(appPort);
 }

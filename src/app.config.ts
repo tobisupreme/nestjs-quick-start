@@ -31,8 +31,26 @@ const configuration = {
     version,
   },
 
+  cors: {
+    origin: ((env: string) => {
+      if (env === '*') return env;
+
+      return env
+        .split(',')
+        .map((origin) => new RegExp(origin.replace(/\s/g, '')));
+    })(env('CORS_ORIGIN', '*')),
+    credentials: env('CORS_CREDENTIALS', true),
+  },
+
   db: {
     url: env.require('DATABASE_URL'),
+  },
+
+  jwt: {
+    secret: env.require('JWT_SECRET'),
+    signOptions: {
+      expiresIn: parseInt(env.require('JWT_EXPIRES', 30 * 60)),
+    },
   },
 
   redis: {
@@ -41,13 +59,6 @@ const configuration = {
     password: env('REDIS_PASSWORD'),
     cacheTtl: parseInt(env('CACHE_TTL', 3600000)),
     url: env('REDIS_URL'),
-  },
-
-  jwt: {
-    secret: env.require('JWT_SECRET'),
-    signOptions: {
-      expiresIn: parseInt(env.require('JWT_EXPIRES', 30 * 60)),
-    },
   },
 
   swagger: {
